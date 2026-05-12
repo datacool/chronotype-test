@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>크로노타입 테스트 — 당신의 뇌는 몇 시에 깨어날까? | 하루 설계자</title>
+<meta name="description" content="5가지 질문으로 나의 크로노타입을 확인하세요. 아침형인지 저녁형인지, 집중 골든타임이 언제인지 3분 안에 알 수 있습니다.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg: #06050f;
+  --bg2: #0d0b1e;
+  --bg3: #141228;
+  --card: #0f0e20;
+  --teal: #1abc9c;
+  --teal-d: #0e8c72;
+  --amber: #f0a500;
+  --amber-d: #b87e00;
+  --purple: #7c5cbf;
+  --purple-l: #a07de0;
+  --red: #e74c3c;
+  --text: #ede8ff;
+  --muted: #6a6685;
+  --muted2: #9490b0;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── 배경 노이즈 효과 ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 15% 30%, rgba(26,188,156,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 70%, rgba(124,92,191,0.07) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 0%, rgba(240,165,0,0.05) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; }
+
+/* ── 헤더 ── */
+.header { text-align: center; margin-bottom: 48px; }
+
+.channel-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(26,188,156,0.1); border: 1px solid rgba(26,188,156,0.25);
+  border-radius: 24px; padding: 6px 16px; font-size: 12px; font-weight: 700;
+  color: var(--teal); letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: clamp(22px, 5vw, 32px); font-weight: 900; line-height: 1.25;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #fff 0%, #c4b5f4 40%, var(--teal) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+.header p { font-size: 14px; color: var(--muted2); line-height: 1.7; }
+
+/* ── 진행 바 ── */
+.progress-wrap { margin-bottom: 36px; }
+.progress-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; color: var(--muted2); margin-bottom: 8px;
+}
+.progress-label span:last-child { font-family: 'JetBrains Mono', monospace; color: var(--teal); font-weight: 700; }
+.progress-track {
+  height: 4px; background: var(--bg3); border-radius: 4px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--teal), var(--amber));
+  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── 질문 카드 ── */
+.question-card {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 32px 28px;
+  margin-bottom: 20px;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.q-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+  color: var(--teal); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px;
+}
+
+.q-text {
+  font-size: clamp(16px, 3.5vw, 20px); font-weight: 800; line-height: 1.4; margin-bottom: 24px;
+}
+
+.options { display: flex; flex-direction: column; gap: 10px; }
+
+.option {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--bg2); border: 1.5px solid var(--border2);
+  border-radius: 12px; padding: 14px 18px;
+  cursor: pointer; transition: all 0.2s; user-select: none;
+}
+.option:hover { border-color: rgba(26,188,156,0.4); background: rgba(26,188,156,0.05); transform: translateX(4px); }
+.option.selected { border-color: var(--teal); background: rgba(26,188,156,0.1); }
+.option.selected .opt-key { background: var(--teal); color: var(--bg); border-color: var(--teal); }
+
+.opt-key {
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 8px;
+  background: var(--bg3); border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+  color: var(--muted2); transition: all 0.2s;
+}
+.opt-text { font-size: 14px; font-weight: 500; line-height: 1.4; }
+
+/* ── 버튼 ── */
+.btn-next {
+  width: 100%; padding: 16px; border-radius: 14px; border: none; cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif; font-size: 15px; font-weight: 800;
+  background: linear-gradient(135deg, var(--teal-d), var(--teal));
+  color: #fff; transition: all 0.2s; margin-top: 8px;
+  opacity: 0.4; pointer-events: none;
+}
+.btn-next.active { opacity: 1; pointer-events: all; }
+.btn-next.active:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,188,156,0.35); }
+
+/* ── 결과 카드 ── */
+.result-wrap { animation: fadeIn 0.6s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+.result-type-badge {
+  text-align: center; margin-bottom: 24px;
+}
+.type-icon { font-size: 52px; margin-bottom: 8px; display: block; }
+.type-label {
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700;
+  color: var(--muted2); margin-bottom: 4px;
+}
+.type-name {
+  font-size: clamp(28px, 6vw, 40px); font-weight: 900; line-height: 1.1;
+}
+
+/* 유형별 컬러 */
+.early   .type-name { color: var(--amber); }
+.mid-early .type-name { color: var(--teal); }
+.mid-late .type-name { color: var(--purple-l); }
+.late    .type-name { color: #d94f8c; }
+
+.result-card {
+  border-radius: 20px; padding: 28px 24px; margin-bottom: 16px;
+  border: 1px solid var(--border2); background: var(--card);
+}
+
+.result-headline {
+  font-size: 15px; font-weight: 800; margin-bottom: 8px; color: var(--teal);
+}
+
+.result-desc { font-size: 13px; color: var(--muted2); line-height: 1.8; }
+
+.timing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 20px 0 0; }
+.timing-cell {
+  background: var(--bg3); border-radius: 10px; padding: 14px 10px; text-align: center;
+}
+.timing-icon { font-size: 20px; margin-bottom: 6px; }
+.timing-label { font-size: 10px; color: var(--muted2); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.timing-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--text); }
+
+.warning-card {
+  background: rgba(240,165,0,0.07); border: 1px solid rgba(240,165,0,0.2);
+  border-radius: 12px; padding: 14px 18px; font-size: 13px; color: var(--muted2);
+  line-height: 1.7; margin-bottom: 16px;
+}
+.warning-card strong { color: var(--amber); display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+
+.liberation-box {
+  background: linear-gradient(135deg, rgba(26,188,156,0.08), rgba(124,92,191,0.08));
+  border: 1.5px solid rgba(26,188,156,0.25);
+  border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 20px;
+}
+.liberation-box p {
+  font-size: clamp(14px, 3vw, 17px); font-weight: 800; line-height: 1.6;
+  color: var(--text);
+}
+.liberation-box span { color: var(--teal); }
+
+.share-prompt {
+  text-align: center; font-size: 13px; color: var(--muted2);
+  margin-bottom: 16px; padding: 16px;
+  border: 1px dashed var(--border2); border-radius: 12px;
+}
+.share-prompt strong { color: var(--text); display: block; font-size: 14px; margin-bottom: 4px; }
+
+.btn-share {
+  width: 100%; padding: 15px; border-radius: 14px; border: none; cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif; font-size: 14px; font-weight: 800;
+  background: var(--bg3); color: var(--text); border: 1.5px solid var(--border2);
+  transition: all 0.2s; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-share:hover { border-color: var(--teal); color: var(--teal); transform: translateY(-2px); }
+
+.btn-retry {
+  width: 100%; padding: 13px; border-radius: 12px; border: 1.5px solid var(--border2);
+  background: transparent; color: var(--muted2); font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px; cursor: pointer; transition: all 0.2s;
+}
+.btn-retry:hover { border-color: var(--muted2); color: var(--text); }
+
+.footer-link {
+  text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--muted);
+}
+.footer-link a { color: var(--teal); text-decoration: none; font-weight: 700; }
+
+/* ── 공유 복사 토스트 ── */
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--teal); color: #fff; padding: 12px 24px; border-radius: 30px;
+  font-size: 13px; font-weight: 700; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 480px) {
+  .timing-grid { grid-template-columns: 1fr 1fr 1fr; }
+  .question-card { padding: 24px 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- 헤더 -->
+  <div class="header" id="startScreen">
+    <div class="channel-badge">🧠 하루 설계자</div>
+    <h1>당신의 뇌는<br>몇 시에 깨어날까요?</h1>
+    <p>5가지 질문으로 나의 크로노타입을 확인하세요.<br>집중 골든타임과 성과 설계법을 알려드립니다.</p>
+    <div style="margin-top: 28px;">
+      <button class="btn-next active" onclick="startTest()" style="opacity:1;pointer-events:all;">테스트 시작하기 →</button>
+    </div>
+  </div>
+
+  <!-- 진행 바 (테스트 중) -->
+  <div class="progress-wrap" id="progressWrap" style="display:none;">
+    <div class="progress-label">
+      <span>나의 크로노타입 테스트</span>
+      <span id="progressText">1 / 5</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:20%"></div></div>
+  </div>
+
+  <!-- 질문 영역 -->
+  <div id="questionArea"></div>
+
+  <!-- 결과 영역 -->
+  <div id="resultArea"></div>
+
+  <div class="footer-link">
+    <a href="https://www.youtube.com/@하루설계자-k" target="_blank">📺 하루 설계자 유튜브 채널</a>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ 복사 완료!</div>
+
+<script>
+const questions = [
+  {
+    q: "휴일에 알람 없이 자연스럽게 일어나면?",
+    note: "알람이 없을 때가 순수한 뇌 시계입니다",
+    options: [
+      { key: "A", text: "6~7시 사이에 저절로 눈이 떠진다" },
+      { key: "B", text: "7~8시쯤 일어나는 편이다" },
+      { key: "C", text: "8~10시는 돼야 제대로 일어난다" },
+      { key: "D", text: "10시 이후에 일어나는 게 편하다" }
+    ]
+  },
+  {
+    q: "하루 중 머리가 가장 잘 돌아가는 시간은?",
+    note: "가장 복잡한 생각이 잘 되는 시간",
+    options: [
+      { key: "A", text: "오전 6~10시, 오전이 황금시간이다" },
+      { key: "B", text: "오전 10시~낮 12시가 집중력 피크다" },
+      { key: "C", text: "오후 1~5시에 집중이 잘 된다" },
+      { key: "D", text: "밤 9시 이후에 뇌가 제대로 켜진다" }
+    ]
+  },
+  {
+    q: "밤에 갑자기 집중이 잘 되는 시간은?",
+    note: "TV 보다가 갑자기 생산적 모드가 되는 순간",
+    options: [
+      { key: "A", text: "거의 없다, 저녁이면 기력이 빠진다" },
+      { key: "B", text: "밤 9시 이전까지만 그런 편이다" },
+      { key: "C", text: "밤 10시~자정 사이에 집중이 잘 된다" },
+      { key: "D", text: "새벽까지도 몰입이 가능하다" }
+    ]
+  },
+  {
+    q: "재택근무·휴가 때 자연스러운 내 패턴은?",
+    note: "회사 눈치 없이 완전히 내 페이스로 살 때",
+    options: [
+      { key: "A", text: "오히려 더 일찍 일어나고 아침이 활발했다" },
+      { key: "B", text: "출근할 때랑 비슷했다" },
+      { key: "C", text: "기상·취침 시간이 점점 뒤로 밀렸다" },
+      { key: "D", text: "낮에 쉬고 밤에 훨씬 집중이 됐다" }
+    ]
+  },
+  {
+    q: "출근 후 첫 2시간, 솔직한 내 상태는?",
+    note: "거짓말 없이 진짜 내 오전 컨디션",
+    options: [
+      { key: "A", text: "이미 집중 최고조, 빠른 처리가 된다" },
+      { key: "B", text: "커피 마시며 서서히 워밍업 중이다" },
+      { key: "C", text: "솔직히 멍하다, 중요한 일은 못 하겠다" },
+      { key: "D", text: "거의 자동모드로 움직인다, 뇌는 아직 잠에 있다" }
+    ]
+  }
+];
+
+const results = {
+  early: {
+    cls: "early",
+    icon: "🌅",
+    label: "EARLY TYPE",
+    name: "아침형",
+    eng: "Early Bird",
+    desc: "당신의 뇌는 이른 아침에 에너지가 최고조에 달합니다. 오전 시간에 가장 효율적으로 작동하는 유형입니다. 한국인 중 약 9%에 해당하는 드문 유형이에요.",
+    golden: "06:00~10:00",
+    work: "아침 기상 직후",
+    study: "오전 집중 공부",
+    warning: "⚠️ 저녁 억지 집중은 비효율",
+    warningDesc: "밤에 무리하게 집중하려 하면 오히려 수면 리듬이 무너집니다. 일찍 마무리하는 것이 이 유형에게는 최고의 전략입니다.",
+    tips: ["기획·보고서는 오전 황금시간에", "회의는 오전 배치가 최적", "저녁엔 가벼운 루틴으로 마무리"]
+  },
+  "mid-early": {
+    cls: "mid-early",
+    icon: "☀️",
+    label: "MID-EARLY TYPE",
+    name: "준아침형",
+    eng: "Morning Oriented",
+    desc: "아침에 비교적 잘 일어나고 오전에 집중력이 높아지는 균형 잡힌 유형입니다. 현재 한국 직장 시스템과 비교적 잘 맞는 편이에요.",
+    golden: "08:00~12:30",
+    work: "오전 핵심 집중",
+    study: "오전 공부",
+    warning: "⚠️ 점심 이후 집중력 급락 주의",
+    warningDesc: "오후 2~4시는 집중력이 자연스럽게 떨어지는 구간입니다. 이 시간엔 단순 업무로 전환하고, 핵심 업무는 오전에 몰아서 처리하세요.",
+    tips: ["오전 10~12시 딥워크 블록 설정", "점심 후 25분 가벼운 산책", "오후는 이메일·행정 업무로"]
+  },
+  "mid-late": {
+    cls: "mid-late",
+    icon: "🌤️",
+    label: "MID-LATE TYPE",
+    name: "준저녁형",
+    eng: "Evening Oriented",
+    desc: "오전 초반보다 오전 후반~오후에 집중력이 올라가는 유형입니다. 한국인 중 가장 많은 비율을 차지할 것으로 분석됩니다. 오전에 멍했던 건 의지력 문제가 아니에요.",
+    golden: "10:30~14:00",
+    work: "오전 10시 이후",
+    study: "퇴근 후 저녁",
+    warning: "⚠️ 오전 핵심 업무 배치는 역효과",
+    warningDesc: "억지로 6시에 일어나 오전에 중요한 업무를 처리하면 코르티솔 피크 전에 일하는 것입니다. 오전은 워밍업 업무로, 핵심은 10시 이후로 배치하세요.",
+    tips: ["오전 9시: 이메일·자료 검토 (워밍업)", "오전 10시 이후: 기획·보고서·창의 업무", "운동은 점심 이후 25분 속보"]
+  },
+  late: {
+    cls: "late",
+    icon: "🌙",
+    label: "LATE TYPE",
+    name: "저녁형",
+    eng: "Night Owl",
+    desc: "밤 시간에 집중력과 에너지가 가장 높아지는 유형입니다. 억지 아침 루틴을 강요받으면 오히려 역효과가 납니다. 한국인의 56%가 저녁형 또는 준저녁형입니다.",
+    golden: "14:00~22:00",
+    work: "오후~저녁",
+    study: "밤 집중 공부",
+    warning: "⚠️ 사회적 시차 관리가 핵심",
+    warningDesc: "출근 시간을 바꿀 수 없다면 오전은 단순 업무로 채우세요. 중요한 결정·기획·창의 업무는 오후 이후로 배치하는 것만으로도 성과가 달라집니다.",
+    tips: ["오전: 루틴·이메일·단순 업무", "오후 2시 이후: 딥워크 집중 블록", "퇴근 후 저녁이 최고의 학습·창작 시간"]
+  }
+};
+
+let current = 0;
+let answers = [];
+let testStarted = false;
+
+function startTest() {
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('progressWrap').style.display = 'block';
+  testStarted = true;
+  showQuestion(0);
+}
+
+function showQuestion(idx) {
+  answers = answers.slice(0, idx);
+  const q = questions[idx];
+  const pct = ((idx + 1) / questions.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${idx + 1} / ${questions.length}`;
+
+  document.getElementById('questionArea').innerHTML = `
+    <div class="question-card">
+      <div class="q-num">Q${idx + 1} — ${q.note}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">
+        ${q.options.map((o, i) => `
+          <div class="option" onclick="selectOption(this, ${i})" data-val="${i}">
+            <div class="opt-key">${o.key}</div>
+            <div class="opt-text">${o.text}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <button class="btn-next" id="nextBtn" onclick="nextQuestion(${idx})">
+      ${idx < questions.length - 1 ? '다음 질문 →' : '결과 확인하기 ✓'}
+    </button>
+  `;
+}
+
+function selectOption(el, val) {
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[current] = val;
+  const btn = document.getElementById('nextBtn');
+  btn.classList.add('active');
+}
+
+function nextQuestion(idx) {
+  if (answers[idx] === undefined) return;
+  current = idx + 1;
+  if (current >= questions.length) {
+    showResult();
+  } else {
+    showQuestion(current);
+  }
+}
+
+function calcType() {
+  const score = answers.reduce((s, a) => s + a, 0);
+  const max = (questions.length - 1) * 3;
+  const pct = score / max;
+  if (pct < 0.25) return 'early';
+  if (pct < 0.5)  return 'mid-early';
+  if (pct < 0.75) return 'mid-late';
+  return 'late';
+}
+
+function showResult() {
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressText').textContent = '완료 ✓';
+  document.getElementById('questionArea').innerHTML = '';
+
+  const type = calcType();
+  const r = results[type];
+
+  document.getElementById('resultArea').innerHTML = `
+    <div class="result-wrap ${r.cls}">
+      <div class="result-type-badge">
+        <span class="type-icon">${r.icon}</span>
+        <div class="type-label">${r.label}</div>
+        <div class="type-name">${r.name}</div>
+        <div style="font-size:12px;color:var(--muted2);margin-top:4px;">${r.eng}</div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-headline">📋 당신의 유형</div>
+        <div class="result-desc">${r.desc}</div>
+
+        <div class="timing-grid">
+          <div class="timing-cell">
+            <div class="timing-icon">⚡</div>
+            <div class="timing-label">집중 골든타임</div>
+            <div class="timing-val">${r.golden}</div>
+          </div>
+          <div class="timing-cell">
+            <div class="timing-icon">💼</div>
+            <div class="timing-label">핵심 업무</div>
+            <div class="timing-val">${r.work}</div>
+          </div>
+          <div class="timing-cell">
+            <div class="timing-icon">📚</div>
+            <div class="timing-label">공부·학습</div>
+            <div class="timing-val">${r.study}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="warning-card">
+        <strong>${r.warning}</strong>
+        ${r.warningDesc}
+      </div>
+
+      <div class="result-card" style="padding-bottom:20px;">
+        <div class="result-headline">🎯 지금 당장 실천할 것</div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+          ${r.tips.map((t, i) => `
+            <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--muted2);">
+              <span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:rgba(26,188,156,0.15);border:1px solid rgba(26,188,156,0.3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--teal);">${i+1}</span>
+              <span>${t}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="liberation-box">
+        <p>아침마다 피곤했던 건<br><span>게으름이 아닐 수 있습니다.</span><br>당신의 뇌 시계가<br>조직의 시간표와 달랐던 겁니다.</p>
+      </div>
+
+      <div class="share-prompt">
+        <strong>💬 댓글로 결과를 남겨보세요 👇</strong>
+        유튜브 영상 댓글에서 당신의 크로노타입을 공유해주세요!
+      </div>
+
+      <button class="btn-share" onclick="copyResult('${r.icon} ${r.name} (${r.label})\\n집중 골든타임: ${r.golden}\\n핵심업무: ${r.work}\\n\\n하루 설계자 크로노타입 테스트')">
+        📋 결과 텍스트 복사하기
+      </button>
+      <button class="btn-retry" onclick="location.reload()">↺ 다시 테스트하기</button>
+    </div>
+  `;
+}
+
+function copyResult(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }).catch(() => {
+    alert('결과 텍스트:\n\n' + text);
+  });
+}
+</script>
+</body>
+</html>
